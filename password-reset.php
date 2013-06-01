@@ -18,10 +18,7 @@ $password_reset = new Password_Reset();
 class Password_Reset {
 
 	function __construct() {
-		// this filter would make it possible for *anyone* to log in with a user who is required to reset their password.
-		// I blame that it was around midnight when I added this
-		// will likely remove this shortly
-		// add_filter( 'authenticate', array( &$this, 'authenticate' ), 10, 3 );
+
 		add_action( 'password_reset', array( &$this, 'password_reset'), 10, 2 );
 
 		add_action( 'set_logged_in_cookie', array( &$this, 'set_logged_in_cookie' ), 10, 5 );
@@ -33,19 +30,6 @@ class Password_Reset {
 
 		add_filter( 'wp_ajax_set_password_reset', array( &$this, 'set_password_reset_cb' ) );
 
-	}
-
-	function authenticate( $null, $username, $password ) {
-		return $null;
-
-		$user = get_user_by( 'login', $username );
-		if ( ! $user ) return $null;
-
-		// if reset flag present
-		if ( '' != ( $reset = get_user_meta( $user->data->ID, 'password_reset', true ) ) ) {
-			return $user;
-			die('!');
-		}
 	}
 
 	function password_reset( $user, $new_pass ) {
