@@ -17,6 +17,12 @@ $password_reset = new Password_Reset();
 
 class Password_Reset {
 
+	/* ::__construct
+	 *
+	 * Get hooked in
+	 *
+	 * @return void
+	 */
 	function __construct() {
 
 		add_action( 'password_reset', array( &$this, 'password_reset'), 10, 2 );
@@ -32,12 +38,31 @@ class Password_Reset {
 
 	}
 
+	/* ::password_reset
+	 *
+	 * If the user is resetting their password, remove the requirement
+	 *
+	 * @param obj $user User object for user resetting their password
+	 * @param string $new_pass User's new password
+	 * @return void
+	 */
 	function password_reset( $user, $new_pass ) {
-		if ( $this->user_reset_required( $user->ID ) ) {
-			delete_user_meta( $user->ID, 'password_reset' );
-		}
+		delete_user_meta( $user->ID, 'password_reset' );
 	}
 
+	/* ::set_logged_in_cookie
+	 *
+	 * If current user is required to reset their password. Make sure they're authenticated (that they've made it this far)
+	 * delete any existing cookies, fetch a reset key and send them on to the reset password screen
+	 * This all happens before they're allowed into the admin
+	 *
+	 * @param ? $logged_in_cookie
+	 * @param ? $expire
+	 * @param ? $expiration
+	 * @param int $user_id
+	 * @param string $logged_in
+	 * @return void
+	 */
 	function set_logged_in_cookie( $logged_in_cookie, $expire, $expiration, $user_id, $logged_in ) {
 
 		if ( $this->user_reset_required( $user_id ) ) {
@@ -66,17 +91,42 @@ class Password_Reset {
 		}
 	}
 
+	/* ::login_message
+	 *
+	 * If the user is on the 'rp' (reset password) page, tell them why
+	 * We should check if this user if forced to reset their password or not, but the text is generic enough to get away without that.
+	 *
+	 * @param string $m Current HTML for login message
+	 * @return string HTML
+	 */
 	function login_message( $m ) {
 		if ( isset( $_GET['action'] ) && $_GET['action'] == 'rp' )
 			return $m . '<p class="message">'. __( 'A password-reset has been initiated for your account.', 'password-reset' ) .'</p>';
 		return $m;
 	}
 
+	/* ::user_row_actions
+	 *
+	 * Insert the admin switch in the user row
+	 *
+	 * @todo Verify capabilities
+	 *
+	 * @param array $actions Current user actions
+	 * @return array
+	 */
 	function user_row_actions( $actions ) {
 		$actions[] = '<a href="#" class="set-password-reset">'. __( 'Password Reset', 'password-reset' ) .'</a>';
 		return $actions;
 	}
 
+	/* ::manage_users_columns
+	 *
+	 * Create a column in the Users table
+	 * Hackish: add admin_footer hook here so we don't have to check screen ids
+	 *
+	 * @param array $columns Columns for user list table
+	 * @return array
+	 */
 	function manage_users_columns( $columns ) {
 		// totally hacking this hook in here so we don't have to check screen ids
 		add_action( 'admin_footer', array( &$this, 'admin_footer' ) );
@@ -85,6 +135,16 @@ class Password_Reset {
 		return $columns;
 	}
 
+	/* ::manage_users_custom_column
+	 *
+	 * Populate our custom column
+	 * Indicate whether the current user is required to change their password.
+	 *
+	 * @param string $x HTML for column
+	 * @param string $column Column ID
+	 * @param int $user_id Current user
+	 * @return string HTML
+	 */
 	function manage_users_custom_column( $x, $column, $user_id ) {
 		if ( $column != 'reset' ) return $x;
 
@@ -96,6 +156,12 @@ class Password_Reset {
 		return $x;
 	}
 
+	/* ::admin_footer
+	 *
+	 * jQuery for the user row switch
+	 *
+	 * @return void
+	 */
 	function admin_footer() {
 		?><script>
 		jQuery(document).ready(function($) {
@@ -122,7 +188,15 @@ class Password_Reset {
 		</script><?php
 	}
 
-	// ajax callback
+	/* ::set_password_reset_cb
+	 *
+	 * Ajax callback
+	 * Toggle the password requirement setting for given user
+	 *
+	 * @todo Verify capabilities
+	 *
+	 * @return void
+	 */
 	function set_password_reset_cb() {
 		$user_id = intval( $_POST['user_id'] );
 		$user = get_user_by( 'id', $user_id );
@@ -139,6 +213,13 @@ class Password_Reset {
 		}
 	}
 
+	/* ::user_reset_required
+	 *
+	 * Check if given user is required to reset their password
+	 *
+	 * @param int $user_id User ID to check
+	 * @return bool
+	 */
 	function user_reset_required( $user_id ) {
 		$reset = get_user_meta( $user_id, 'password_reset', true );
 		return ! empty( $reset );
