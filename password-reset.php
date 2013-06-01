@@ -33,16 +33,14 @@ class Password_Reset {
 	}
 
 	function password_reset( $user, $new_pass ) {
-		// if reset flag present
-		if ( '' != ( $reset = get_user_meta( $user->ID, 'password_reset', true ) ) ) {
+		if ( $this->user_reset_required( $user->ID ) ) {
 			delete_user_meta( $user->ID, 'password_reset' );
 		}
 	}
 
 	function set_logged_in_cookie( $logged_in_cookie, $expire, $expiration, $user_id, $logged_in ) {
 
-		// if reset flag present
-		if ( '' != ( $reset = get_user_meta( $user_id, 'password_reset', true ) ) ) {
+		if ( $this->user_reset_required( $user_id ) ) {
 			// don't let the cookies cause confusion
 			wp_clear_auth_cookie();
 
@@ -91,7 +89,7 @@ class Password_Reset {
 		if ( $column != 'reset' ) return $x;
 
 		$x = '<span class="password-reset">';
-		if ( '' != ( $reset = get_user_meta( $user_id, 'password_reset', true ) ) ) {
+		if ( $this->user_reset_required( $user_id ) ) {
 			$x .= __( 'Password reset initiated.', 'password-reset' );
 		}
 		$x .= '</span>';
@@ -130,14 +128,20 @@ class Password_Reset {
 		$user = get_user_by( 'id', $user_id );
 		if ( !$user ) return false;
 
-		$status = get_user_meta( $user_id, 'password_reset', 0 );
-		if ( ! empty( $status ) ) {
+		// this is a simple toggle. if set, unset; otherwise set.
+
+		if ( $this->user_reset_required( $user_id ) ) {
 			delete_user_meta( $user_id, 'password_reset' );
 			die( 'not-required' );
 		} else {
 			update_user_meta( $user_id, 'password_reset', 1 );
 			die( 'required' );
 		}
+	}
+
+	function user_reset_required( $user_id ) {
+		$reset = get_user_meta( $user_id, 'password_reset', true );
+		return ! empty( $reset );
 	}
 
 }
