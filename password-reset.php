@@ -178,8 +178,10 @@ class Password_Reset {
 
 					if ( response == 'required' ) {
 						$tr.find( '.password-reset' ).html( '<?php _e( 'Password reset required', 'password-reset' ); ?>' );
-					} else {
+					} else if (response == 'not-required') {
 						$tr.find( '.password-reset' ).html( '' );
+					} else {
+						alert( "<?php echo __('You do not have permission to edit this user.') ?>" )
 					}
 
 				});
@@ -201,6 +203,9 @@ class Password_Reset {
 		$user_id = intval( $_POST['user_id'] );
 		$user = get_user_by( 'id', $user_id );
 		if ( !$user ) return false;
+		// cap check
+		if ( ! current_user_can('edit_user', $user_id) )
+			wp_die( __('You do not have permission to edit this user.') );
 
 		// this is a simple toggle. if set, unset; otherwise set.
 
