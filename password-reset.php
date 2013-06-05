@@ -3,14 +3,14 @@
  * Plugin Name: Password Reset
  * Plugin URI: trepmal.com
  * Description:
- * Version:
+ * Version: 0.5
  * Author: Kailey Lampert
  * Author URI: kaileylampert.com
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  * TextDomain: password-reset
  * DomainPath:
- * Network: false
+ * Network:
  */
 
 $password_reset = new Password_Reset();
@@ -30,7 +30,7 @@ class Password_Reset {
 		add_action( 'set_logged_in_cookie', array( &$this, 'set_logged_in_cookie' ), 10, 5 );
 		add_filter( 'login_message', array( &$this, 'login_message' ) );
 
-		add_action( 'user_row_actions', array( &$this, 'user_row_actions' ) );
+		add_action( 'user_row_actions', array( &$this, 'user_row_actions' ), 10, 2 );
 		add_filter( 'manage_users_columns', array( &$this, 'manage_users_columns' ) );
 		add_filter( 'manage_users_custom_column', array( &$this, 'manage_users_custom_column' ), 10, 3 );
 
@@ -109,13 +109,13 @@ class Password_Reset {
 	 *
 	 * Insert the admin switch in the user row
 	 *
-	 * @todo Verify capabilities
-	 *
 	 * @param array $actions Current user actions
+	 * @param obj $user User object
 	 * @return array
 	 */
-	function user_row_actions( $actions ) {
-		$actions[] = '<a href="#" class="set-password-reset">'. __( 'Password Reset', 'password-reset' ) .'</a>';
+	function user_row_actions( $actions, $user ) {
+		if ( current_user_can( 'edit_user', $user->ID ) )
+			$actions['password-reset-action'] = '<a href="#" class="set-password-reset">'. __( 'Password Reset', 'password-reset' ) .'</a>';
 		return $actions;
 	}
 
@@ -195,8 +195,6 @@ class Password_Reset {
 	 * Ajax callback
 	 * Toggle the password requirement setting for given user
 	 *
-	 * @todo Verify capabilities
-	 *
 	 * @return void
 	 */
 	function set_password_reset_cb() {
@@ -204,7 +202,7 @@ class Password_Reset {
 		$user = get_user_by( 'id', $user_id );
 		if ( !$user ) return false;
 		// cap check
-		if ( ! current_user_can('edit_user', $user_id) )
+		if ( ! current_user_can('edit_user', $user_id ) )
 			wp_die( __('You do not have permission to edit this user.') );
 
 		// this is a simple toggle. if set, unset; otherwise set.
