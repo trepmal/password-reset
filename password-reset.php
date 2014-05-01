@@ -222,7 +222,7 @@ class Password_Reset {
 		$user_id = intval( $_POST['user_id'] );
 		$user = get_user_by( 'id', $user_id );
 		if ( ! $user ) {
-			return false;
+			wp_send_json_error( 'Unable to find user.', 'password-reset' );
 		}
 
 		// cap check
