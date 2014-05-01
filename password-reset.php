@@ -75,12 +75,14 @@ class Password_Reset {
 
 			// get/generate reset key
 			global $wpdb;
-			$key = $wpdb->get_var(
-				$wpdb->prepare(
-					"SELECT user_activation_key FROM $wpdb->users WHERE user_login = %s",
-					$user_login
-				)
-			);
+			// sometimes the "gotten" key is out-of-date. skip for now
+			// $key = $wpdb->get_var(
+			// 	$wpdb->prepare(
+			// 		"SELECT user_activation_key FROM $wpdb->users WHERE user_login = %s",
+			// 		$user_login
+			// 	)
+			// );
+			$key = '';
 
 			if ( empty( $key ) ) {
 				// Generate something random for a key...
