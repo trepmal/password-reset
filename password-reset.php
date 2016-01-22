@@ -99,7 +99,7 @@ class Password_Reset {
 
 				// Now insert the new md5 key into the db
 				$wpdb->update( $wpdb->users,
-					array( 'user_activation_key' => $hasher ),
+					array( 'user_activation_key' => time() . ':' . $hasher ),
 					array( 'user_login'          => $user_login )
 				);
 			}
